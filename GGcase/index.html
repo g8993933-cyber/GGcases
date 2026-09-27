@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>GGcase - кейс симулятор</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #050508;
+            background-image: radial-gradient(circle at center, #1b072b 0%, #030305 100%);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 15px;
+            text-align: center;
+            min-height: 100vh;
+            user-select: none;
+            -webkit-font-smoothing: antialiased;
+        }
+        h1 { 
+            color: #ff007f; 
+            font-size: 32px; 
+            text-transform: uppercase; 
+            letter-spacing: 3px; 
+            margin-bottom: 5px; 
+            cursor: pointer;
+            display: inline-block;
+            transition: transform 0.1s;
+            text-shadow: 0 0 15px rgba(255, 0, 127, 0.6);
+        }
+        h1:hover { opacity: 0.85; text-shadow: 0 0 25px rgba(255, 0, 127, 0.9); }
+        h1:active { transform: scale(0.96); }
+        .subtitle { 
+            color: #00f3ff; 
+            font-size: 15px; 
+            font-weight: bold; 
+            margin-bottom: 15px; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            cursor: pointer;
+            display: inline-block;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+        .balance-box {
+            display: inline-block; background: rgba(15, 12, 24, 0.9); border: 1px solid #00f3ff;
+            border-radius: 8px; padding: 8px 24px; font-size: 18px; margin-bottom: 15px;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.25), inset 0 0 10px rgba(0, 243, 255, 0.1);
+        }
+        .balance-box span { color: #00ff66; font-weight: bold; text-shadow: 0 0 8px rgba(0, 255, 102, 0.6); }
+        
+        .search-bar { margin-bottom: 15px; }
+        .search-bar input {
+            background: rgba(15, 12, 24, 0.9); border: 1px solid #9d00ff; color: #fff;
+            padding: 9px 16px; border-radius: 6px; width: 100%; max-width: 320px; font-size: 14px;
+            box-shadow: 0 0 10px rgba(157, 0, 255, 0.3); outline: none; transition: all 0.3s;
+        }
+        .search-bar input:focus { border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.5); }
+
+        .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .nav-btn {
+            background: #11091f; color: #fff; border: 1px solid #4a154b;
+            padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 8px rgba(74, 21, 75, 0.4); transition: all 0.3s;
+        }
+        .nav-btn:hover:not(:disabled) { border-color: #00f3ff; box-shadow: 0 0 12px rgba(0, 243, 255, 0.4); }
+        .nav-btn.active { background: #ff007f; border-color: #ff007f; box-shadow: 0 0 18px rgba(255, 0, 127, 0.8); }
+        .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: rgba(18, 12, 28, 0.95);
+            border: 1px solid #3b1459;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 220px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7), inset 0 0 8px rgba(157, 0, 255, 0.1);
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            border-color: #00f3ff;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 243, 255, 0.3), inset 0 0 12px rgba(0, 243, 255, 0.2);
+        }
+        .card img { 
+            width: 140px; 
+            height: 90px; 
+            object-fit: contain; 
+            filter: drop-shadow(0 4px 10px rgba(0, 243, 255, 0.25));
+        }
+        .card-title { font-size: 13px; font-weight: bold; margin: 8px 0; min-height: 32px; display: flex; align-items: center; text-align: center; color: #f1f1f1; }
+        .card-price { color: #00f3ff; font-weight: bold; margin-bottom: 10px; font-size: 14px; text-shadow: 0 0 8px rgba(0, 243, 255, 0.4); }
+
+        .btn {
+            background: linear-gradient(135deg, #ff007f, #9d00ff); color: #fff; border: none; padding: 9px 15px;
+            border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%;
+            box-shadow: 0 0 12px rgba(255, 0, 127, 0.4); transition: all 0.2s;
+        }
+        .btn:hover:not(:disabled) { box-shadow: 0 0 18px rgba(255, 0, 127, 0.8); opacity: 0.9; }
+        .btn:disabled { background: #221b2e; box-shadow: none; color: #555; cursor: not-allowed; }
+        .btn-green { background: linear-gradient(135deg, #00ff66, #00bfff); box-shadow: 0 0 12px rgba(0, 255, 102, 0.4); color: #050508; }
+        .btn-green:hover:not(:disabled) { box-shadow: 0 0 18px rgba(0, 255, 102, 0.8); }
+        .btn-danger { background: linear-gradient(135deg, #ff3333, #aa0000); box-shadow: 0 0 12px rgba(255, 51, 51, 0.4); color: #fff; }
+        .btn-danger:hover:not(:disabled) { box-shadow: 0 0 18px rgba(255, 51, 51, 0.8); }
+
+        .section-view {
+            display: none; background: rgba(12, 8, 20, 0.95); border: 1px solid #ff007f;
+            border-radius: 10px; padding: 20px; max-width: 850px; margin: 0 auto;
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.25);
+        }
+
+        @keyframes dropDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .roulette-container {
+            position: relative;
+            height: 150px;
+            overflow: hidden;
+            background: #030306;
+            border: 2px solid #00f3ff;
+            border-radius: 8px;
+            margin: 5px 0;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2), inset 0 0 15px rgba(0,0,0,0.9);
+        }
+        .roulette-track { display: flex; position: absolute; left: 0; top: 10px; will-change: transform; }
+        .roulette-item {
+            width: 130px;
+            height: 128px;
+            background: #140c22;
+            border: 1px solid #4a154b;
+            margin: 0 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            flex-shrink: 0;
+            box-shadow: inset 0 0 8px rgba(157, 0, 255, 0.15);
+        }
+        .roulette-item img { width: 100px; height: 65px; object-fit: contain; }
+        .roulette-item span { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 115px; margin-top: 5px; color: #ddd; }
+        .roulette-pointer {
+            position: absolute; left: 50%; top: 0; bottom: 0; width: 4px;
+            background: #00f3ff; transform: translateX(-50%); z-index: 10;
+            box-shadow: 0 0 15px #00f3ff, 0 0 5px #fff;
+        }
+
+        .toggle-box { margin: 10px 0; font-size: 14px; color: #00f3ff; text-shadow: 0 0 6px rgba(0,243,255,0.4); }
+
+        .upg-board { display: flex; gap: 15px; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; }
+        .upg-side { flex: 1; min-width: 250px; background: rgba(10, 7, 18, 0.9); border: 1px solid #3b1459; border-radius: 8px; padding: 12px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+        .slot {
+            height: 85px; background: #120a1f; border: 1px dashed #7b2cbf;
+            border-radius: 6px; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; cursor: pointer; position: relative; transition: all 0.2s;
+        }
+        .slot:hover { border-color: #00f3ff; box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }
+        .slot img { width: 75px; height: 50px; object-fit: contain; }
+        .slot .del-btn {
+            position: absolute; top: -5px; right: -5px; background: #ff007f;
+            color: #fff; border: none; width: 20px; height: 20px; border-radius: 50%;
+            font-size: 12px; cursor: pointer; box-shadow: 0 0 8px rgba(255,0,127,0.8);
+        }
+
+        .preset-header { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; margin-bottom: 6px; }
+        .gear-btn {
+            background: none; border: none; font-size: 16px; cursor: pointer; color: #00f3ff; transition: transform 0.2s;
+            text-shadow: 0 0 8px rgba(0,243,255,0.6);
+        }
+        .gear-btn:hover { color: #fff; transform: rotate(45deg); }
+
+        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .preset-btn {
+            background: #190f2b; color: #fff; border: 1px solid #5a189a;
+            padding: 8px 4px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 6px rgba(90, 24, 154, 0.4); transition: all 0.2s;
+        }
+        .preset-btn:hover:not(:disabled) { border-color: #00f3ff; box-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
+        .preset-btn:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
+
+        .wheel-wrap { position: relative; width: 240px; height: 240px; margin: 45px auto 20px auto; }
+        .wheel {
+            width: 100%; height: 100%; border-radius: 50%; border: 6px solid #0a0612;
+            background: conic-gradient(from 180deg, #1c142b 0deg, #1c142b 360deg);
+            box-shadow: 0 0 35px rgba(255, 0, 127, 0.4), 0 0 15px rgba(0, 243, 255, 0.3), inset 0 0 20px rgba(0,0,0,0.9);
+            transition: background 0.6s ease-in-out;
+        }
+        .arrow-box { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; }
+        .arrow {
+            position: absolute; bottom: 50%; left: 50%; transform: translateX(-50%);
+            width: 4px; height: 120px;
+            background: #00f3ff;
+            box-shadow: 0 0 12px #00f3ff, 0 0 4px #fff;
+            transform-origin: bottom center;
+        }
+        .wheel-center {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 65px; height: 65px; background: #080410; border-radius: 50%;
+            border: 3px solid #ff007f; display: flex; align-items: center;
+            justify-content: center; font-weight: bold; font-size: 15px; color: #00f3ff;
+            z-index: 5; box-shadow: 0 0 15px rgba(255,0,127,0.6);
+        }
+        .pos-label { position: absolute; font-size: 13px; color: #00f3ff; font-weight: bold; text-shadow: 0 0 6px rgba(0,243,255,0.5); }
+        .pos-0 { bottom: -26px; left: 50%; transform: translateX(-50%); color: #ff007f; text-shadow: 0 0 8px rgba(255,0,127,0.7); }
+        .pos-100 { top: -26px; left: 50%; transform: translateX(-50%); }
+        .pos-50-l { top: 50%; left: -42px; transform: translateY(-50%); }
+        .pos-50-r { top: 50%; right: -42px; transform: translateY(-50%); }
+
+        /* Профиль */
+        .profile-card {
+            background: rgba(18, 12, 28, 0.95); border: 1px solid #00f3ff; border-radius: 10px;
+            padding: 20px; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 15px;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.2);
+        }
+        .profile-avatar {
+            width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 2px solid #ff007f;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.7);
+        }
+        .profile-name { font-size: 20px; font-weight: bold; color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.4); }
+        .profile-stats { display: flex; gap: 10px; width: 100%; justify-content: center; flex-wrap: wrap; }
+        .stat-box {
+            background: rgba(10, 7, 18, 0.9); border: 1px solid #7b2cbf; border-radius: 8px;
+            padding: 12px; flex: 1; min-width: 100px; text-align: center; box-shadow: inset 0 0 8px rgba(123, 44, 191, 0.3);
+        }
+        .stat-box .number { font-size: 20px; font-weight: bold; color: #00ff66; margin-top: 5px; text-shadow: 0 0 8px rgba(0, 255, 102, 0.6); }
+        .stat-box .label { font-size: 11px; color: #aaa; text-transform: uppercase; }
+        .best-item-box {
+            background: rgba(10, 7, 18, 0.9); border: 1px solid #ff007f; border-radius: 8px;
+            padding: 15px; width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.2);
+        }
+        .best-item-box img { width: 140px; height: 90px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,243,255,0.3)); }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 2, 6, 0.85); backdrop-filter: blur(5px); z-index: 100; align-items: center; justify-content: center;
+        }
+        .modal-body {
+            background: #0d0817; border: 1px solid #ff007f; border-radius: 10px;
+            width: 90%; max-width: 680px; max-height: 80vh; overflow-y: auto; padding: 15px;
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.4);
+        }
+        .cheat-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #140c22; padding: 12px 16px; border-radius: 6px;
+            margin-bottom: 10px; font-size: 14px; border: 1px solid #4a154b;
+        }
+        .cheat-toggle { cursor: pointer; width: 20px; height: 20px; accent-color: #00ff66; }
+        
+        .preset-config-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .preset-config-row input {
+            background: #140c22; border: 1px solid #00f3ff; color: #fff; padding: 8px; border-radius: 5px; text-align: center;
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.2); outline: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 id="site-logo" onclick="handleLogoClick()">GGCASE</h1>
+    <br>
+    <div class="subtitle" onclick="handleLogoClick()">деп,додеп,мегадодеп</div>
+    <br>
+
+    <div style="display: inline-block;">
+        <div class="balance-box" style="margin-right: 10px; cursor: pointer; width: 45px; text-align: center; padding: 8px 0; opacity: 0.5;" onclick="toggleMusic()" id="music-btn" title="Вкл/Выкл музыку">🎵</div>
+        <div class="balance-box">Баланс: <span id="ui-balance">150</span> ₽</div>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="nav-btn active" id="btn-tab-cases" onclick="setTab('cases')">Кейсы (120)</button>
+        <button class="nav-btn" id="btn-tab-inv" onclick="setTab('inv')">Инвентарь</button>
+        <button class="nav-btn" id="btn-tab-upg" onclick="setTab('upg')">Апгрейд</button>
+        <button class="nav-btn" id="btn-tab-profile" onclick="setTab('profile')">Профиль</button>
+    </div>
+
+    <div class="search-bar" id="cases-search-box">
+        <input type="text" id="case-search" placeholder="Поиск кейса или скина внутри..." oninput="filterCases(this.value)">
+    </div>
+
+    <div id="tab-cases-view" class="grid"></div>
+
+    <div id="roulette-view" class="section-view">
+        <h2 id="roulette-case-name" style="color: #ff007f; text-shadow: 0 0 10px rgba(255,0,127,0.6);">Открытие кейса</h2>
+        
+        <div id="roulettes-wrapper" style="display: flex; flex-direction: column; gap: 4px; margin-top: 15px;"></div>
+
+        <div id="multi-open-box" class="nav-tabs" style="margin: 15px 0 10px 0; gap: 6px; flex-wrap: wrap;"></div>
+        
+        <div class="toggle-box">
+            <label><input type="checkbox" id="fast-case" style="accent-color: #00f3ff;"> ⚡ Моментально</label>
+        </div>
+        
+        <div id="roulette-result" style="margin: 10px 0; font-weight: bold; font-size: 16px; min-height: 24px; text-shadow: 0 0 8px rgba(255,255,255,0.3);"></div>
+        
+        <button id="roulette-start-btn" class="btn" style="max-width: 250px; margin: 0 auto;" onclick="spinCase()">Открыть</button>
+        <br>
+        <button class="btn" style="background: #1c142b; border: 1px solid #00f3ff; box-shadow: 0 0 10px rgba(0,243,255,0.3); max-width: 250px; margin: 10px auto 0 auto;" onclick="goHome()">Назад к кейсам</button>
+    </div>
+
+    <div id="tab-inv-view" class="section-view">
+        <h2 style="color: #00f3ff; text-shadow: 0 0 10px rgba(0,243,255,0.6);">Инвентарь</h2>
+        <div id="inv-grid" class="grid" style="margin-top: 15px;"></div>
+        <p id="inv-empty" style="color: #777; margin-top: 20px;">Ваш инвентарь пуст. Откройте кейсы!</p>
+    </div>
+
+    <div id="tab-upg-view" class="section-view">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div>
+                Цвет:
+                <select id="arrow-select" onchange="setArrowColor(this.value)" style="background: #140c22; color: #fff; padding: 4px; border: 1px solid #00f3ff; border-radius: 4px; outline: none; box-shadow: 0 0 8px rgba(0,243,255,0.3);">
+                    <option value="#00f3ff">Голубой</option>
+                    <option value="#ff007f">Розовый</option>
+                    <option value="#00ff66">Зеленый</option>
+                    <option value="#ffff00">Желтый</option>
+                </select>
+            </div>
+            <label class="toggle-box" style="margin: 0;"><input type="checkbox" id="fast-upg" style="accent-color: #00f3ff;"> ⚡ Быстро</label>
+        </div>
+
+        <div class="upg-board">
+            <div class="upg-side">
+                <h4 style="color: #ff007f;">Скины (до 6)</h4>
+                <div class="slots-grid" id="slots-input"></div>
+                <div style="margin-top: 10px; font-size: 13px;">Сумма: <span id="upg-offer-sum" style="color: #00f3ff;">0</span> ₽</div>
+            </div>
+            
+            <div class="upg-side">
+                <h4 style="color: #00f3ff;">Желаемый скин</h4>
+                <div class="slot" id="slot-target" style="height: 85px;" onclick="openTargetModal()">
+                    <span style="color: #888;">+ Выбрать</span>
+                </div>
+                <div style="margin-top: 6px; font-size: 13px;">Цена: <span id="upg-target-sum" style="color: #ff007f;">0</span> ₽</div>
+
+                <div class="preset-header">
+                    <span style="font-size: 12px; color: #888; font-weight: bold;">Быстрый подбор</span>
+                    <button class="gear-btn" onclick="openPresetConfig()">⚙️</button>
+                </div>
+                <div class="preset-grid" id="preset-buttons-box"></div>
+            </div>
+        </div>
+
+        <div class="wheel-wrap">
+            <span class="pos-label pos-0">0%</span>
+            <span class="pos-label pos-100">100%</span>
+            <span class="pos-label pos-50-l">50%</span>
+            <span class="pos-label pos-50-r">50%</span>
+            <div id="upg-wheel" class="wheel"></div>
+            <div class="wheel-center" id="upg-percent">0%</div>
+            <div class="arrow-box" id="upg-arrow-box">
+                <div class="arrow" id="upg-arrow"></div>
+            </div>
+        </div>
+
+        <div id="upg-res-text" style="font-weight: bold; margin-bottom: 12px; min-height: 24px;"></div>
+        <button id="upg-run-btn" class="btn" style="max-width: 250px; margin: 0 auto;" onclick="spinUpgrade()" disabled>АПГРЕЙД</button>
+    </div>
+
+    <!-- Профиль -->
+    <div id="tab-profile-view" class="section-view">
+        <div class="profile-card">
+            <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAyADIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=" id="user-avatar" class="profile-avatar" alt="Аватарка">
+            <div class="profile-name">тестер</div>
+            <div class="profile-stats">
+                <div class="stat-box">
+                    <div class="label">Апгрейдов</div>
+                    <div class="number" id="stat-upgrades">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Открыто кейсов</div>
+                    <div class="number" id="stat-cases">0</div>
+                </div>
+            </div>
+            <div style="width: 100%; font-size: 13px; color: #888; text-align: left; margin-top: 5px;">Самый дорогой предмет:</div>
+            <div class="best-item-box" id="profile-best-item">
+                <span style="color: #666; font-size: 13px;">Пока нет предметов</span>
+            </div>
+            <button class="btn btn-danger" style="margin-top: 10px;" onclick="resetGameProgress()">🗑️ Сбросить прогресс</button>
+        </div>
+    </div>
+
+    <!-- Модалки -->
+    <div class="modal" id="modal-select">
+        <div class="modal-body">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 id="modal-title" style="color: #ff007f;">Выбор скина</h3>
+                <button onclick="closeModal()" style="background: none; border: none; color: #fff; font-size: 22px; cursor: pointer;">✕</button>
+            </div>
+            <input type="text" id="modal-search" placeholder="Быстрый поиск скина..." oninput="filterModalSkins(this.value)" style="width: 100%; background: #140c22; border: 1px solid #00f3ff; color: #fff; padding: 8px 12px; border-radius: 5px; margin-bottom: 12px; font-size: 13px; outline: none; box-shadow: 0 0 8px rgba(0,243,255,0.2);">
+            <div class="grid" id="modal-grid"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-preset-config">
+        <div class="modal-body" style="max-width: 420px; border-color: #00f3ff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: #00f3ff; text-shadow: 0 0 8px rgba(0,243,255,0.5);">⚙️ Настройка пресетов</h3>
+                <button onclick="closePresetConfig()" style="background: none; border: none; color: #fff; font-size: 22px; cursor: pointer;">✕</button>
+            </div>
+            <div id="preset-inputs-container"></div>
+            <button class="btn" style="margin-top: 10px;" onclick="saveCustomPresets()">Сохранить</button>
+        </div>
+    </div>
+
+    <!-- Чит-меню -->
+    <div class="modal" id="modal-cheat">
+        <div class="modal-body" style="max-width: 450px; border-color: #00ff66;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: #00ff66; text-shadow: 0 0 8px rgba(0,255,102,0.6);">⚙️ Меню Разработчика</h3>
+                <button onclick="closeCheatModal()" style="background: none; border: none; color: #fff; font-size: 22px; cursor: pointer;">✕</button>
+            </div>
+
+            <div class="cheat-item">
+                <span>100% Успешный апгрейд</span>
+                <input type="checkbox" id="cheat-always-win-upg" class="cheat-toggle">
+            </div>
+            <div class="cheat-item">
+                <span>Всегда окупаемый кейс</span>
+                <input type="checkbox" id="cheat-always-profit-case" class="cheat-toggle">
+            </div>
+            
+            <div class="cheat-item" style="border-color: #00f3ff;">
+                <span title="Если RTP игрока выше этого значения, игра будет принудительно занижать шансы выигрыша.">Целевой RTP (%) (Подкрутка)</span>
+                <input type="number" id="cheat-target-rtp" value="95" onchange="updateTargetRTP(this.value)" style="width: 60px; background: #140c22; color: #00f3ff; border: 1px solid #00f3ff; padding: 4px; border-radius: 4px; text-align: center; font-weight: bold; outline: none;">
+            </div>
+
+            <button class="btn btn-green" style="margin-top: 10px;" onclick="addCheatBalance()">+ 100 000 ₽ на баланс</button>
+        </div>
+    </div>
+
+    <script>
+        let balance = 150;
+        let inventory = [];
+        let upgradeOffers = [];
+        let upgradeTarget = null;
+        let activeCase = null;
+        let currentUpgRotation = 0;
+        let isUpgrading = false;
+
+        let currentMultiCount = 1;
+        let isSpinningCase = false;
+        let targetRTP = 95;
+        let stats = {
+            casesOpened: 0,
+            upgradesDone: 0,
+            bestItem: null,
+            totalWagered: 0, 
+            totalWon: 0      
+        };
+
+        let modalCurrentItems = [];
+        let modalOnSelectCallback = null;
+        let customPresets = ["75%", "50%", "35%", "x2", "x5", "x10"];
+        let logoClicks = 0;
+        let logoClickTimer = null;
+        const SAVE_KEY = 'ggcase_save_data_v1';
+
+        // --- ФОНОВАЯ МУЗЫКА И АВТОЗАПУСК ---
+        const bgMusic = new Audio('ez4ence.mp3'); 
+        bgMusic.loop = true;
+        bgMusic.volume = 0.15; 
+        let isMusicPlaying = false;
+
+        function toggleMusic() {
+            if (isMusicPlaying) {
+                bgMusic.pause();
+                document.getElementById('music-btn').style.opacity = '0.5';
+            } else {
+                bgMusic.play().catch(e => console.log(e));
+                document.getElementById('music-btn').style.opacity = '1';
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+
+        // --- ЗВУКОВОЙ ДВИЖОК ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        // Агрессивный автозапуск музыки (сработает либо сразу, либо по первому клику/нажатию)
+        const tryPlayMusic = () => {
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            if (!isMusicPlaying) {
+                bgMusic.play().then(() => {
+                    isMusicPlaying = true;
+                    document.getElementById('music-btn').style.opacity = '1';
+                    // Удаляем слушатели после успешного включения
+                    ['click', 'touchstart', 'keydown'].forEach(evt => document.removeEventListener(evt, tryPlayMusic));
+                }).catch(() => {
+                    // Браузер заблокировал запуск без взаимодействия, ждем следующего клика
+                });
+            }
+        };
+
+        // Пытаемся запустить при первой загрузке страницы
+        window.addEventListener('DOMContentLoaded', () => {
+            bgMusic.play().then(() => {
+                isMusicPlaying = true;
+                document.getElementById('music-btn').style.opacity = '1';
+            }).catch(() => {
+                // Если заблокировано (почти всегда), вешаем невидимую ловушку на первый клик/тап по экрану
+                ['click', 'touchstart', 'keydown'].forEach(evt => document.addEventListener(evt, tryPlayMusic));
+            });
+        });
+        // -----------------------
+
+        const Sound = {
+            noiseBuffer: null,
+            getNoise: function() {
+                if (this.noiseBuffer) return this.noiseBuffer;
+                const bufferSize = audioCtx.sampleRate * 2;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                this.noiseBuffer = buffer;
+                return buffer;
+            },
+            playOsc: function(freq, type, dur, vol, time = audioCtx.currentTime) {
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, time);
+                gain.gain.setValueAtTime(vol, time);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(time);
+                osc.stop(time + dur);
+            },
+            tick: function() { 
+                this.playOsc(800, 'sine', 0.05, 0.03); 
+            },
+            win: function() { 
+                this.playOsc(523, 'sine', 0.4, 0.1);
+                this.playOsc(659, 'sine', 0.6, 0.1, audioCtx.currentTime + 0.1);
+            },
+            rimshot: function() { 
+                if (!audioCtx) return;
+                const t = audioCtx.currentTime;
+                this.playOsc(250, 'triangle', 0.15, 0.5, t);
+                this.playOsc(200, 'triangle', 0.15, 0.5, t + 0.15);
+                this.playOsc(150, 'triangle', 0.2, 0.6, t + 0.3);
+                
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = this.getNoise();
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'highpass'; filter.frequency.value = 5000;
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0, t + 0.45);
+                gain.gain.linearRampToValueAtTime(0.3, t + 0.46);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 1.2);
+                noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+                noise.start(t + 0.45); noise.stop(t + 1.2);
+            },
+            firework: function() { 
+                if (!audioCtx) return;
+                const t = audioCtx.currentTime;
+                
+                const osc = audioCtx.createOscillator();
+                const oscGain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, t);
+                osc.frequency.exponentialRampToValueAtTime(900, t + 0.5);
+                oscGain.gain.setValueAtTime(0.1, t);
+                oscGain.gain.linearRampToValueAtTime(0, t + 0.5);
+                osc.connect(oscGain); oscGain.connect(audioCtx.destination);
+                osc.start(t); osc.stop(t + 0.5);
+
+                const boom = audioCtx.createBufferSource();
+                boom.buffer = this.getNoise();
+                const bFilter = audioCtx.createBiquadFilter();
+                bFilter.type = 'lowpass'; bFilter.frequency.setValueAtTime(1000, t + 0.5); bFilter.frequency.exponentialRampToValueAtTime(100, t + 1.5);
+                const bGain = audioCtx.createGain();
+                bGain.gain.setValueAtTime(0, t + 0.5); bGain.gain.linearRampToValueAtTime(0.8, t + 0.52); bGain.gain.exponentialRampToValueAtTime(0.01, t + 1.5);
+                boom.connect(bFilter); bFilter.connect(bGain); bGain.connect(audioCtx.destination);
+                boom.start(t + 0.5); boom.stop(t + 1.5);
+
+                for (let i = 0; i < 7; i++) {
+                    const cTime = t + 0.6 + Math.random() * 0.4;
+                    const crackle = audioCtx.createBufferSource(); crackle.buffer = this.getNoise();
+                    const cFilter = audioCtx.createBiquadFilter(); cFilter.type = 'highpass'; cFilter.frequency.value = 3000 + Math.random() * 2000;
+                    const cGain = audioCtx.createGain(); cGain.gain.setValueAtTime(0, cTime); cGain.gain.linearRampToValueAtTime(0.2, cTime + 0.01); cGain.gain.exponentialRampToValueAtTime(0.01, cTime + 0.1);
+                    crackle.connect(cFilter); cFilter.connect(cGain); cGain.connect(audioCtx.destination);
+                    crackle.start(cTime); crackle.stop(cTime + 0.1);
+                }
+            }
+        };
+
+        function updateTargetRTP(val) {
+            targetRTP = parseFloat(val) || 95;
+            saveGame();
+        }
+
+        function saveGame() {
+            const saveData = {
+                balance: balance,
+                inventory: inventory,
+                stats: stats,
+                customPresets: customPresets,
+                targetRTP: targetRTP
+            };
+            localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem(SAVE_KEY);
+            if (!saved) return;
+            try {
+                const data = JSON.parse(saved);
+                if (data.balance !== undefined) balance = data.balance;
+                if (data.inventory) inventory = data.inventory;
+                if (data.stats) {
+                    stats = { ...stats, ...data.stats };
+                }
+                if (data.customPresets) customPresets = data.customPresets;
+                if (data.targetRTP !== undefined) {
+                    targetRTP = data.targetRTP;
+                    document.getElementById('cheat-target-rtp').value = targetRTP;
+                }
+            } catch (e) {
+                console.error("Ошибка при загрузке сохранений:", e);
+            }
+        }
+
+        function resetGameProgress() {
+            if (confirm("Вы уверены, что хотите полностью сбросить весь прогресс?")) {
+                localStorage.removeItem(SAVE_KEY);
+                balance = 150;
+                inventory = [];
+                upgradeOffers = [];
+                upgradeTarget = null;
+                stats = { casesOpened: 0, upgradesDone: 0, bestItem: null, totalWagered: 0, totalWon: 0 };
+                updateBalance();
+                renderInventory();
+                renderProfile();
+                renderUpgrade();
+                goHome();
+                alert("Прогресс сброшен!");
+            }
+        }
+
+        function handleLogoClick() {
+            logoClicks++;
+            clearTimeout(logoClickTimer);
+            if (logoClicks >= 3) {
+                logoClicks = 0;
+                document.getElementById('modal-cheat').style.display = 'flex';
+            } else {
+                logoClickTimer = setTimeout(() => {
+                    if (logoClicks > 0 && logoClicks < 3) goHome();
+                    logoClicks = 0;
+                }, 350);
+            }
+        }
+
+        function goHome() {
+            if (isUpgrading || isSpinningCase) return;
+            closeModal();
+            closePresetConfig();
+            document.getElementById('roulette-view').style.display = 'none';
+            setTab('cases');
+        }
+
+        function closeCheatModal() { document.getElementById('modal-cheat').style.display = 'none'; }
+        
+        function addCheatBalance() {
+            balance += 100000;
+            updateBalance();
+            if(activeCase) updateMultiOpenUI();
+            saveGame();
+        }
+
+        function checkBestItem(item) {
+            if (!stats.bestItem || item.price > stats.bestItem.price) stats.bestItem = { ...item };
+        }
+
+        function renderProfile() {
+            document.getElementById('stat-upgrades').innerText = stats.upgradesDone;
+            document.getElementById('stat-cases').innerText = stats.casesOpened;
+
+            const bestBox = document.getElementById('profile-best-item');
+            if (stats.bestItem) {
+                bestBox.innerHTML = `
+                    <img src="${stats.bestItem.img}" alt="">
+                    <div style="font-size: 13px; font-weight: bold; margin-top: 4px;">${stats.bestItem.name}</div>
+                    <div style="color: #00f3ff; font-weight: bold; font-size: 14px; margin-top: 2px;">${stats.bestItem.price.toLocaleString()} ₽</div>
+                `;
+            } else {
+                bestBox.innerHTML = '<span style="color: #666; font-size: 13px;">Пока нет предметов</span>';
+            }
+        }
+
+        function makeSvgSkin(type, c1, c2, isBlueGem = false, isElite = false) {
+            let shape = '';
+            if (isBlueGem) {
+                shape = '<rect x="35" y="105" width="230" height="25" rx="5" fill="url(#blueGemGrad)" stroke="#00f3ff" stroke-width="2"/>' +
+                        '<path d="M95 85 L185 85 L180 105 L100 105 Z" fill="#03045e"/>' +
+                        '<rect x="110" y="130" width="22" height="40" rx="3" fill="#1b1b1b" transform="rotate(-15 110 130)"/>' +
+                        '<rect x="230" y="112" width="30" height="10" rx="3" fill="#00f3ff"/>' +
+                        '<circle cx="80" cy="117" r="6" fill="#00f3ff"/>';
+            } else if (isElite) {
+                shape = '<path d="M70 140 C100 130 140 100 170 70 C210 50 250 60 240 90 C210 130 160 150 100 150 Z" fill="url(#eliteGrad)"/>' +
+                        '<circle cx="70" cy="135" r="12" fill="none" stroke="#00f3ff" stroke-width="5"/>';
+            } else if (type === 'knife') {
+                shape = '<path d="M70 140 C100 130 140 100 170 70 C210 50 250 60 240 90 C210 130 160 150 100 150 Z" fill="url(#fg)"/>' +
+                        '<circle cx="70" cy="135" r="12" fill="none" stroke="#222" stroke-width="6"/>';
+            } else if (type === 'sniper') {
+                shape = '<rect x="35" y="115" width="235" height="15" rx="3" fill="url(#fg)"/>' +
+                        '<rect x="95" y="95" width="90" height="12" rx="2" fill="#111"/>' +
+                        '<circle cx="95" cy="101" r="7" fill="none" stroke="' + c2 + '" stroke-width="2"/>' +
+                        '<circle cx="185" cy="101" r="7" fill="none" stroke="' + c2 + '" stroke-width="2"/>';
+            } else if (type === 'rifle') {
+                shape = '<rect x="45" y="112" width="195" height="20" rx="3" fill="url(#fg)"/>' +
+                        '<rect x="105" y="132" width="22" height="35" rx="2" fill="#1b1b1b" transform="rotate(-15 105 132)"/>' +
+                        '<rect x="235" y="118" width="25" height="8" rx="2" fill="#222"/>';
+            } else {
+                shape = '<path d="M85 105 L185 105 L180 128 L145 128 L135 160 L105 160 L110 128 L85 128 Z" fill="url(#fg)"/>';
+            }
+
+            const raw = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200" width="100%" height="100%">' +
+                '<defs>' +
+                    '<linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="' + c1 + '"/><stop offset="100%" stop-color="' + c2 + '"/></linearGradient>' +
+                    '<linearGradient id="blueGemGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#0077b6"/><stop offset="50%" stop-color="#00f3ff"/><stop offset="100%" stop-color="#90e0ef"/></linearGradient>' +
+                    '<linearGradient id="eliteGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="' + c1 + '"/><stop offset="50%" stop-color="#ff007f"/><stop offset="100%" stop-color="' + c2 + '"/></linearGradient>' +
+                '</defs>' +
+                '<ellipse cx="150" cy="175" rx="80" ry="12" fill="#000" opacity="0.6"/>' + shape +
+            '</svg>';
+            return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(raw);
+        }
+
+        function makeSvgCase(title, c1, c2, sym) {
+            const shortName = title.length > 14 ? title.substr(0, 14) : title;
+            const svgRaw = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="100%" height="100%">' +
+                '<defs><linearGradient id="bodyG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="' + c1 + '"/><stop offset="100%" stop-color="' + c2 + '"/></linearGradient><linearGradient id="metalG" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3a3d45"/><stop offset="50%" stop-color="#00f3ff"/><stop offset="100%" stop-color="#282a30"/></linearGradient></defs>' +
+                '<ellipse cx="160" cy="212" rx="105" ry="16" fill="#000" opacity="0.6"/>' +
+                '<path d="M65 42 C65 25, 95 18, 160 18 C225 18, 255 25, 255 42" fill="none" stroke="url(#metalG)" stroke-width="9" stroke-linecap="round"/>' +
+                '<rect x="45" y="42" width="230" height="38" rx="6" fill="url(#bodyG)" stroke="#111" stroke-width="3"/>' +
+                '<path d="M48 80 L272 80 L260 196 C259 202, 250 206, 244 206 L76 206 C70 206, 61 202, 60 196 Z" fill="url(#bodyG)" stroke="#111" stroke-width="3"/>' +
+                '<path d="M85 80 L76 206 M130 80 L126 206 M190 80 L194 206 M235 80 L244 206" stroke="#111" stroke-width="4" opacity="0.6"/>' +
+                '<circle cx="160" cy="135" r="30" fill="#0a0612" stroke="#00f3ff" stroke-width="3"/>' +
+                '<text x="160" y="143" font-family="Arial Black, Impact, sans-serif" font-size="22" fill="#00f3ff" text-anchor="middle">' + sym + '</text>' +
+                '<rect x="138" y="68" width="44" height="30" rx="4" fill="url(#metalG)" stroke="#111" stroke-width="2"/>' +
+                '<rect x="38" y="62" width="14" height="42" rx="3" fill="url(#metalG)" stroke="#111" stroke-width="2"/>' +
+                '<rect x="268" y="62" width="14" height="42" rx="3" fill="url(#metalG)" stroke="#111" stroke-width="2"/>' +
+                '<rect x="85" y="180" width="150" height="16" rx="3" fill="#080410" stroke="#ff007f" stroke-width="1.5"/>' +
+                '<text x="160" y="192" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="bold" fill="#fff" text-anchor="middle" letter-spacing="1">' + shortName.toUpperCase() + '</text>' +
+            '</svg>';
+            return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgRaw);
+        }
+
+        const officialSkinsRaw = [
+            { name: "P250 | Песчаная дюна", search: "P250 | Sand Dune", price: 3, type: "pistol", c1: "#d4ac0d", c2: "#7d6608" },
+            { name: "Nova | Карамельное яблоко", search: "Nova | Candy Apple", price: 5, type: "rifle", c1: "#ff007f", c2: "#17202a" },
+            { name: "MP9 | Песчаная буря", search: "MP9 | Sand Scale", price: 8, type: "rifle", c1: "#a07844", c2: "#4a341b" },
+            { name: "MAC-10 | Серебро", search: "MAC-10 | Silver", price: 14, type: "rifle", c1: "#00f3ff", c2: "#2c3e50" },
+            { name: "P250 | Валентность", search: "P250 | Valence", price: 18, type: "pistol", c1: "#0066ff", c2: "#1b4f72" },
+            { name: "USP-S | Закрученный", search: "USP-S | Torque", price: 22, type: "pistol", c1: "#00f3ff", c2: "#2c3e50" },
+            { name: "Glock-18 | Горелка Бунзена", search: "Glock-18 | Bunsen Burner", price: 25, type: "pistol", c1: "#0066ff", c2: "#1b4f72" },
+            { name: "Desert Eagle | Оксидное пламя", search: "Desert Eagle | Oxide Blaze", price: 28, type: "pistol", c1: "#ff007f", c2: "#17202a" },
+            { name: "MP9 | Смертоносная лилия", search: "MP9 | Deadly Poison", price: 35, type: "rifle", c1: "#9d00ff", c2: "#2c3e50" },
+            { name: "P250 | Сверхновая", search: "P250 | Supernova", price: 55, type: "pistol", c1: "#ff7700", c2: "#1c2833" },
+            { name: "M4A1-S | Нитро", search: "M4A1-S | Nitro", price: 85, type: "rifle", c1: "#ff7700", c2: "#1c2833" },
+            { name: "Glock-18 | Призрачные лучи", search: "Glock-18 | Clear Polymer", price: 110, type: "pistol", c1: "#00ff66", c2: "#145a32" },
+            { name: "USP-S | Проводник", search: "USP-S | Lead Conduit", price: 140, type: "pistol", c1: "#7f8c8d", c2: "#2c3e50" },
+            { name: "AWP | Капилляры", search: "AWP | Capillary", price: 175, type: "sniper", c1: "#9d00ff", c2: "#2c3e50" },
+            { name: "AK-47 | Затерянная земля", search: "AK-47 | Uncharted", price: 220, type: "rifle", c1: "#a07844", c2: "#4a341b" },
+            { name: "M4A4 | Магний", search: "M4A4 | Magnesium", price: 280, type: "rifle", c1: "#7f8c8d", c2: "#2c3e50" },
+            { name: "MAC-10 | Неоновый гонщик", search: "MAC-10 | Neon Rider", price: 360, type: "rifle", c1: "#ff007f", c2: "#00f3ff" },
+            { name: "M4A4 | Злобный даймё", search: "M4A4 | Evil Daimyo", price: 420, type: "rifle", c1: "#ff007f", c2: "#17202a" },
+            { name: "AWP | Экзоскелет", search: "AWP | Exoskeleton", price: 550, type: "sniper", c1: "#7f8c8d", c2: "#2c3e50" },
+            { name: "AWP | Древесная гадюка", search: "AWP | Atheris", price: 680, type: "sniper", c1: "#00ff66", c2: "#145a32" },
+            { name: "AK-47 | Изумрудный завиток", search: "AK-47 | Emerald Pinstripe", price: 890, type: "rifle", c1: "#00ff66", c2: "#117864" },
+            { name: "M4A1-S | Огонь Чантико", search: "M4A1-S | Chantico's Fire", price: 1250, type: "rifle", c1: "#ff007f", c2: "#ffff00" },
+            { name: "USP-S | Сайрекс", search: "USP-S | Cyrex", price: 1650, type: "pistol", c1: "#ff007f", c2: "#ffffff" },
+            { name: "AK-47 | Фантомный вредитель", search: "AK-47 | Phantom Disruptor", price: 2100, type: "rifle", c1: "#ff7700", c2: "#2c3e50" },
+            { name: "M4A4 | Безлюдный космос", search: "M4A4 | Desolate Space", price: 2700, type: "rifle", c1: "#00f3ff", c2: "#9d00ff" },
+            { name: "AWP | Горячечные грезы", search: "AWP | Fever Dream", price: 3900, type: "sniper", c1: "#ff007f", c2: "#00f3ff" },
+            { name: "AK-47 | Легион Анубиса", search: "AK-47 | Legion of Anubis", price: 5200, type: "rifle", c1: "#ffff00", c2: "#2c3e50" },
+            { name: "AK-47 | Красная линия", search: "AK-47 | Redline", price: 7200, type: "rifle", c1: "#2d3436", c2: "#ff007f" },
+            { name: "USP-S | Убийство подтверждено", search: "USP-S | Kill Confirmed", price: 9200, type: "pistol", c1: "#ff007f", c2: "#ff7700" },
+            { name: "Desert Eagle | Поток информации", search: "Desert Eagle | Printstream", price: 12500, type: "pistol", c1: "#f5f6fa", c2: "#00f3ff" },
+            { name: "Нож с лезвием-крюком | Вороненая сталь", search: "Gut Knife | Blue Steel", price: 14000, type: "knife", c1: "#00f3ff", c2: "#17202a" },
+            { name: "AWP | Азимов", search: "AWP | Asiimov", price: 17500, type: "sniper", c1: "#ff7700", c2: "#ffffff" },
+            { name: "M4A1-S | Поток информации", search: "M4A1-S | Printstream", price: 24000, type: "rifle", c1: "#ffffff", c2: "#00f3ff" },
+            { name: "Складной нож | Чистая вода", search: "Flip Knife | Bright Water", price: 26000, type: "knife", c1: "#0066ff", c2: "#1b4f72" },
+            { name: "AK-47 | Вулкан", search: "AK-47 | Vulcan", price: 33000, type: "rifle", c1: "#00f3ff", c2: "#ffffff" },
+            { name: "Охотничий нож | Убийство", search: "Huntsman Knife | Slaughter", price: 38000, type: "knife", c1: "#ff007f", c2: "#17202a" },
+            { name: "Нож с лезвием-крюком | Волны", search: "Gut Knife | Doppler", price: 44000, type: "knife", c1: "#9d00ff", c2: "#192a56" },
+            { name: "Складной нож | Мраморный градиент", search: "Flip Knife | Marble Fade", price: 58000, type: "knife", c1: "#ff007f", c2: "#ffff00" },
+            { name: "Штык-нож M9 | Дамасская сталь", search: "M9 Bayonet | Damascus Steel", price: 75000, type: "knife", c1: "#bdc3c7", c2: "#7f8c8d" },
+            { name: "Керамбит | Чистая вода", search: "Karambit | Bright Water", price: 88000, type: "knife", c1: "#00f3ff", c2: "#1b4f72" },
+            { name: "Нож-бабочка | Вороненая сталь", search: "Butterfly Knife | Blue Steel", price: 120000, type: "knife", c1: "#2c3e50", c2: "#17202a" },
+            { name: "Штык-нож M9 | Волны", search: "M9 Bayonet | Doppler", price: 165000, type: "knife", c1: "#9d00ff", c2: "#192a56" },
+            { name: "Керамбит | Волны", search: "Karambit | Doppler", price: 198000, type: "knife", c1: "#9d00ff", c2: "#192a56" },
+            { name: "Нож-бабочка | Волны", search: "Butterfly Knife | Doppler", price: 264000, type: "knife", c1: "#9d00ff", c2: "#192a56" },
+            { name: "Штык-нож M9 | Мраморный градиент", search: "M9 Bayonet | Marble Fade", price: 285000, type: "knife", c1: "#ff007f", c2: "#ffff00" },
+            { name: "Керамбит | Мраморный градиент", search: "Karambit | Marble Fade", price: 342000, type: "knife", c1: "#ff007f", c2: "#ffff00" },
+            { name: "Нож-бабочка | Мраморный градиент", search: "Butterfly Knife | Marble Fade", price: 456000, type: "knife", c1: "#ff007f", c2: "#ffff00" },
+            { name: "AWP | История о драконе (Dragon Lore)", search: "AWP | Dragon Lore", price: 850000, type: "sniper", c1: "#ffff00", c2: "#ff007f" },
+            { name: "M4A4 | Вой (Howl)", search: "M4A4 | Howl", price: 980000, type: "rifle", c1: "#ff007f", c2: "#2c3e50" },
+            { name: "AWP | Гунгнир", search: "AWP | Gungnir", price: 1200000, type: "sniper", c1: "#00f3ff", c2: "#0066ff" },
+            { name: "Нож-бабочка | Гамма-волны", search: "Butterfly Knife | Gamma Doppler", price: 1850000, type: "knife", c1: "#00ff66", c2: "#006266" },
+            { name: "Керамбит | Гамма-волны", search: "Karambit | Gamma Doppler", price: 2400000, type: "knife", c1: "#00ff66", c2: "#006266" },
+            { name: "Navaja Knife | Градиент (Fade)", search: "Navaja Knife | Fade", price: 3200000, type: "knife", c1: "#ff007f", c2: "#ffff00", isElite: true },
+            { name: "Ursus Knife | Волны (Doppler)", search: "Ursus Knife | Doppler", price: 4500000, type: "knife", c1: "#9d00ff", c2: "#192a56", isElite: true },
+            { name: "Stiletto Knife | Градиент (Fade)", search: "Stiletto Knife | Fade", price: 7800000, type: "knife", c1: "#ff007f", c2: "#ffff00", isElite: true },
+            { name: "Talon Knife | Мраморный градиент", search: "Talon Knife | Marble Fade", price: 14000000, type: "knife", c1: "#ff007f", c2: "#ffff00", isElite: true },
+            { name: "Skeleton Knife | Градиент (Fade)", search: "Skeleton Knife | Fade", price: 25000000, type: "knife", c1: "#ff007f", c2: "#ffff00", isElite: true },
+            { name: "M9 Bayonet | Гамма-волны (Emerald)", search: "M9 Bayonet | Gamma Doppler", price: 42000000, type: "knife", c1: "#00ff66", c2: "#006266", isElite: true },
+            { name: "Karambit | Гамма-волны (Emerald)", search: "Karambit | Gamma Doppler", price: 68000000, type: "knife", c1: "#00ff66", c2: "#006266", isElite: true },
+            { name: "Butterfly Knife | Волны (Sapphire)", search: "Butterfly Knife | Doppler", price: 85000000, type: "knife", c1: "#00f3ff", c2: "#0066ff", isElite: true },
+            { name: "AK-47 | Поверхностная закалка (Blue Gem #661)", search: "AK-47 | Case Hardened", price: 100000000, type: "rifle", c1: "#0077b6", c2: "#00f3ff", isBlueGem: true }
+        ];
+
+        const highTierPool = [
+            { name: "Водительские перчатки | Снежный барс", price: 54000, search: "Driver Gloves | Snow Leopard", type: "knife", c1: "#ffffff", c2: "#2c3e50" },
+            { name: "Спортивные перчатки | Порок (Vice)", price: 180000, search: "Sport Gloves | Vice", type: "knife", c1: "#ff007f", c2: "#0066ff" },
+            { name: "Спортивные перчатки | Ящик Пандоры", price: 320000, search: "Sport Gloves | Pandora's Box", type: "knife", c1: "#9d00ff", c2: "#192a56" },
+            { name: "Штык-нож M9 | Градиент (Fade)", price: 210000, search: "M9 Bayonet | Fade", type: "knife", c1: "#ff007f", c2: "#ffff00" },
+            { name: "Керамбит | Градиент (Fade)", price: 290000, search: "Karambit | Fade", type: "knife", c1: "#ff007f", c2: "#ffff00" },
+            { name: "Нож-бабочка | Градиент (Fade)", price: 410000, search: "Butterfly Knife | Fade", type: "knife", c1: "#ff007f", c2: "#ffff00" },
+            { name: "Скелетный нож | Поверхностная закалка (Blue Gem)", price: 620000, search: "Skeleton Knife | Case Hardened", type: "knife", c1: "#0066ff", c2: "#d4ac0d" },
+            { name: "Керамбит | Поверхностная закалка (Blue Gem)", price: 1450000, search: "Karambit | Case Hardened", type: "knife", c1: "#0066ff", c2: "#d4ac0d" }
+        ];
+
+        const allOfficialSkins = [...officialSkinsRaw, ...highTierPool];
+        const csSkins = allOfficialSkins.map(s => ({
+            ...s, img: s.directImg ? s.directImg : makeSvgSkin(s.type, s.c1, s.c2, s.isBlueGem, s.isElite)
+        })).sort((a, b) => a.price - b.price);
+
+        const caseAdjectives = ["Неоновый", "Кибер", "Армейский", "Тактический", "Глючный", "Штурмовой", "Алый", "Темный", "Электрический", "Синтетический", "Ночной", "Квантовый", "Имперский", "Титановый", "Элитный", "Королевский", "Властелин", "Олигарх", "Суверенный", "Легендарный"];
+        const caseNouns = ["Клик", "Резерв", "Прорыв", "Залп", "Тайник", "Сейф", "Легион", "Вихрь", "Гамбит", "Азарт", "Апекс", "Куш"];
+        const caseColors = ["#9d00ff", "#ff007f", "#00f3ff", "#00ff66", "#ff7700", "#7209b7", "#3a0ca3", "#4361ee", "#4cc9f0", "#f72585", "#b5179e", "#560bad"];
+
+        let cases = [];
+        const minCasePrice = 13, maxCasePrice = 1000000;
+        const elitePoolForCases = csSkins.filter(s => s.price >= 3000000);
+
+        for (let i = 0; i < 120; i++) {
+            const progress = i / 119;
+            const price = Math.round(minCasePrice * Math.pow(maxCasePrice / minCasePrice, progress));
+            const name = `${caseAdjectives[i % caseAdjectives.length]} ${caseNouns[(i + 3) % caseNouns.length]} #${i + 1}`;
+            const maxProfit = Math.round(price * 2.5);
+            const minAcceptableDrop = Math.max(3, Math.round(price * 0.35));
+
+            let subPool = csSkins.filter(s => s.price <= maxProfit && s.price >= minAcceptableDrop);
+            if (subPool.length < 5) {
+                subPool = csSkins.filter(s => s.price <= maxProfit);
+                if (subPool.length > 8) subPool = subPool.slice(subPool.length - 8);
+            }
+
+            let itemTop = subPool[subPool.length - 1] || csSkins[4];
+            if (i >= 110 && elitePoolForCases.length > 0) {
+                itemTop = elitePoolForCases[(i - 110) % elitePoolForCases.length];
+            }
+
+            cases.push({
+                id: `c_${i}`, name: `${name} (${price.toLocaleString()} ₽)`, price: price,
+                caseImg: makeSvgCase(name, caseColors[i % caseColors.length], caseColors[(i + 4) % caseColors.length], "★"),
+                items: [
+                    { name: (subPool[0]||csSkins[0]).name, price: (subPool[0]||csSkins[0]).price, chance: 42, img: (subPool[0]||csSkins[0]).img },
+                    { name: (subPool[Math.floor(subPool.length * 0.25)]||csSkins[1]).name, price: (subPool[Math.floor(subPool.length * 0.25)]||csSkins[1]).price, chance: 28, img: (subPool[Math.floor(subPool.length * 0.25)]||csSkins[1]).img },
+                    { name: (subPool[Math.floor(subPool.length * 0.5)]||csSkins[2]).name, price: (subPool[Math.floor(subPool.length * 0.5)]||csSkins[2]).price, chance: 17, img: (subPool[Math.floor(subPool.length * 0.5)]||csSkins[2]).img },
+                    { name: (subPool[Math.floor(subPool.length * 0.75)]||csSkins[3]).name, price: (subPool[Math.floor(subPool.length * 0.75)]||csSkins[3]).price, chance: 10, img: (subPool[Math.floor(subPool.length * 0.75)]||csSkins[3]).img },
+                    { name: itemTop.name, price: itemTop.price, chance: 3, img: itemTop.img }
+                ]
+            });
+        }
+
+        async function loadOfficialCS2Images() {
+            try {
+                const skinsRes = await fetch("https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json");
+                if (skinsRes.ok) {
+                    const apiSkins = await skinsRes.json();
+                    csSkins.forEach(skin => {
+                        if (skin.directImg) { skin.img = skin.directImg; return; }
+                        const match = apiSkins.find(s => s.name && (s.name.toLowerCase() === (skin.search||skin.name).toLowerCase() || s.name.toLowerCase().includes((skin.search||skin.name).toLowerCase())));
+                        if (match && match.image) skin.img = match.image;
+                    });
+                }
+                const cratesRes = await fetch("https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/crates.json");
+                if (cratesRes.ok) {
+                    const apiCrates = await cratesRes.json();
+                    const offImgs = apiCrates.filter(c => c.type === 'Case' && c.image).map(c => c.image);
+                    if (offImgs.length > 0) cases.forEach((c, idx) => c.caseImg = offImgs[idx % offImgs.length]);
+                }
+                cases.forEach(c => c.items.forEach(it => {
+                    const origin = csSkins.find(s => s.name === it.name);
+                    if (origin && origin.img) it.img = origin.img;
+                }));
+                initCases(); renderInventory(); renderUpgrade();
+            } catch (err) { console.log("Официальные изображения загружены из встроенной базы."); }
+        }
+
+        function setTab(tab) {
+            if (isUpgrading || isSpinningCase) return;
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.section-view, #tab-cases-view, #cases-search-box').forEach(el => el.style.display = 'none');
+
+            if (tab === 'cases') {
+                document.getElementById('tab-cases-view').style.display = 'grid';
+                document.getElementById('cases-search-box').style.display = 'block';
+                document.getElementById('btn-tab-cases').classList.add('active');
+            } else if (tab === 'inv') {
+                document.getElementById('tab-inv-view').style.display = 'block';
+                document.getElementById('btn-tab-inv').classList.add('active');
+                renderInventory();
+            } else if (tab === 'upg') {
+                document.getElementById('tab-upg-view').style.display = 'block';
+                document.getElementById('btn-tab-upg').classList.add('active');
+                renderPresetButtons(); renderUpgrade();
+            } else if (tab === 'profile') {
+                document.getElementById('tab-profile-view').style.display = 'block';
+                document.getElementById('btn-tab-profile').classList.add('active');
+                renderProfile();
+            }
+        }
+
+        function initCases(list = cases) {
+            const root = document.getElementById('tab-cases-view');
+            root.innerHTML = '';
+            list.forEach(c => {
+                const el = document.createElement('div');
+                el.className = 'card';
+                el.innerHTML = `<div class="card-title">${c.name}</div><img src="${c.caseImg}" alt="${c.name}"><div class="card-price">${c.price.toLocaleString()} ₽</div><button class="btn" onclick="openCaseScreen('${c.id}')">Открыть</button>`;
+                root.appendChild(el);
+            });
+            updateBalance();
+        }
+
+        function filterCases(query) {
+            const q = query.toLowerCase().trim();
+            initCases(!q ? cases : cases.filter(c => c.name.toLowerCase().includes(q) || c.items.some(it => it.name.toLowerCase().includes(q))));
+        }
+
+        function updateBalance() { document.getElementById('ui-balance').innerText = balance.toLocaleString(); }
+
+        function updateMultiOpenUI() {
+            if (!activeCase) return;
+            const box = document.getElementById('multi-open-box');
+            
+            let maxCases = Math.floor(balance / activeCase.price);
+            if (maxCases < 1) maxCases = 1; 
+            if (maxCases > 10) maxCases = 10;
+
+            box.innerHTML = '';
+            for (let i = 1; i <= maxCases; i++) {
+                const btn = document.createElement('button');
+                btn.className = `nav-btn ${i === currentMultiCount ? 'active' : ''}`;
+                btn.style.padding = '6px 14px';
+                btn.style.minWidth = '40px';
+                btn.innerText = i;
+                btn.disabled = isSpinningCase;
+                btn.onclick = () => { 
+                    if(!isSpinningCase) {
+                        currentMultiCount = i; 
+                        updateMultiOpenUI(); 
+                    }
+                };
+                box.appendChild(btn);
+            }
+
+            if (currentMultiCount > maxCases) {
+                const btn = document.createElement('button');
+                btn.className = `nav-btn active`;
+                btn.style.padding = '6px 14px';
+                btn.style.minWidth = '40px';
+                btn.innerText = currentMultiCount;
+                btn.disabled = true;
+                box.appendChild(btn);
+            }
+
+            const cost = activeCase.price * currentMultiCount;
+            const startBtn = document.getElementById('roulette-start-btn');
+            startBtn.innerText = `Открыть ${currentMultiCount} шт. за ${cost.toLocaleString()} ₽`;
+            startBtn.disabled = (balance < cost || isSpinningCase);
+
+            if (!isSpinningCase) {
+                const wrapper = document.getElementById('roulettes-wrapper');
+                const currentElements = wrapper.children.length;
+
+                if (currentElements < currentMultiCount) {
+                    for (let i = currentElements; i < currentMultiCount; i++) {
+                        const r = document.createElement('div');
+                        r.className = 'roulette-container';
+                        r.style.animation = `dropDown 0.3s ease forwards`;
+                        r.innerHTML = `
+                            <div class="roulette-pointer"></div>
+                            <div class="roulette-track" id="roulette-track-${i}"></div>
+                        `;
+                        wrapper.appendChild(r);
+                        buildTrack(i);
+                    }
+                } else if (currentElements > currentMultiCount) {
+                    for (let i = currentElements - 1; i >= currentMultiCount; i--) {
+                        wrapper.removeChild(wrapper.children[i]);
+                    }
+                }
+            }
+        }
+
+        function openCaseScreen(id) {
+            activeCase = cases.find(c => c.id === id);
+            
+            let maxCases = Math.floor(balance / activeCase.price);
+            if (maxCases < 1) maxCases = 1;
+            if (maxCases > 10) maxCases = 10;
+            if (currentMultiCount > maxCases) currentMultiCount = maxCases;
+
+            document.getElementById('tab-cases-view').style.display = 'none';
+            document.getElementById('cases-search-box').style.display = 'none';
+            document.getElementById('roulette-view').style.display = 'block';
+            document.getElementById('roulette-case-name').innerText = activeCase.name;
+            document.getElementById('roulette-result').innerText = '';
+            
+            document.getElementById('roulettes-wrapper').innerHTML = ''; 
+            updateMultiOpenUI(); 
+        }
+
+        function buildTrack(index) {
+            const tr = document.getElementById(`roulette-track-${index}`);
+            if(!tr) return;
+            tr.style.transition = 'none'; 
+            tr.style.transform = 'translateX(0px)'; 
+            tr.innerHTML = '';
+            for (let i = 0; i < 45; i++) {
+                const randItem = activeCase.items[Math.floor(Math.random() * activeCase.items.length)];
+                tr.innerHTML += `<div class="roulette-item"><img src="${randItem.img}" alt=""><span>${randItem.name}</span></div>`;
+            }
+        }
+
+        function spinCase() {
+            let cost = activeCase.price * currentMultiCount;
+            if (balance < cost) return alert("Недостаточно средств на балансе!");
+            if (isSpinningCase) return;
+            
+            isSpinningCase = true;
+            balance -= cost;
+            stats.casesOpened += currentMultiCount;
+            stats.totalWagered += cost;
+            
+            updateBalance();
+
+            document.querySelectorAll('#multi-open-box .nav-btn').forEach(b => b.disabled = true);
+            document.getElementById('roulette-start-btn').disabled = true;
+            document.getElementById('roulette-result').innerText = '';
+
+            const cheatProfit = document.getElementById('cheat-always-profit-case').checked;
+            let availableItems = cheatProfit ? activeCase.items.filter(it => it.price >= activeCase.price) : activeCase.items;
+            if(!availableItems.length) availableItems = activeCase.items;
+
+            let results = [];
+            let rtpTargetDec = targetRTP / 100;
+
+            for (let i = 0; i < currentMultiCount; i++) {
+                let r = Math.random() * availableItems.reduce((s, item) => s + item.chance, 0);
+                let winItem = availableItems[0];
+                for (let it of availableItems) { if (r < it.chance) { winItem = it; break; } r -= it.chance; }
+
+                let currentRTP = stats.totalWagered > 0 ? (stats.totalWon / stats.totalWagered) : 0;
+
+                if (!cheatProfit) {
+                    if (currentRTP > rtpTargetDec && winItem.price > activeCase.price) {
+                        if (Math.random() < 0.80) winItem = availableItems[0];
+                    } else if (currentRTP < rtpTargetDec * 0.8 && winItem.price <= activeCase.price) {
+                        const profitable = availableItems.filter(it => it.price > activeCase.price);
+                        if (profitable.length > 0 && Math.random() < 0.5) winItem = profitable[Math.floor(Math.random() * profitable.length)];
+                    }
+                }
+
+                stats.totalWon += winItem.price;
+                checkBestItem(winItem);
+                
+                let finalItem = { uid: Math.random().toString(36).substr(2, 9), ...winItem };
+                results.push(finalItem);
+
+                buildTrack(i);
+                const track = document.getElementById(`roulette-track-${i}`);
+                const targetIndex = 32;
+                const targetCard = track.children[targetIndex];
+                if (targetCard) {
+                    targetCard.querySelector('img').src = winItem.img;
+                    targetCard.querySelector('span').innerText = winItem.name;
+                }
+            }
+
+            const isFast = document.getElementById('fast-case').checked;
+            const targetIndex = 32;
+            const containerWidth = document.querySelector('.roulette-container').clientWidth || 600;
+            const targetOffset = -(targetIndex * 138 + 69 - containerWidth / 2);
+
+            const finalize = () => {
+                let totalProfit = 0;
+                results.forEach(res => {
+                    inventory.push(res);
+                    totalProfit += res.price;
+                });
+
+                if (currentMultiCount === 1) {
+                    document.getElementById('roulette-result').innerHTML = `Выпало: <span style="color:#00f3ff; text-shadow: 0 0 8px rgba(0,243,255,0.6);">${results[0].name}</span> (${results[0].price.toLocaleString()} ₽)`;
+                } else {
+                    document.getElementById('roulette-result').innerHTML = `Открыто ${currentMultiCount} шт. Общий выигрыш: <span style="color:#00ff66; text-shadow: 0 0 8px rgba(0,255,102,0.6);">${totalProfit.toLocaleString()} ₽</span>`;
+                }
+                
+                const isRare = totalProfit >= (activeCase.price * currentMultiCount * 1.5);
+                if (isRare) {
+                    Sound.firework();
+                } else {
+                    Sound.win();
+                }
+
+                saveGame();
+                isSpinningCase = false;
+                updateMultiOpenUI(); 
+            };
+
+            if (isFast) {
+                for (let i = 0; i < currentMultiCount; i++) {
+                    const track = document.getElementById(`roulette-track-${i}`);
+                    track.style.transition = 'none'; 
+                    track.style.transform = `translateX(${targetOffset}px)`;
+                }
+                finalize();
+            } else {
+                let ticks = 0;
+                let tickTimer;
+                const playTick = () => {
+                    if (!isSpinningCase) return;
+                    Sound.tick();
+                    ticks++;
+                    let nextDelay = 30 + (ticks * ticks * 0.8);
+                    if (nextDelay < 600) tickTimer = setTimeout(playTick, nextDelay);
+                };
+                playTick();
+
+                for (let i = 0; i < currentMultiCount; i++) {
+                    const track = document.getElementById(`roulette-track-${i}`);
+                    setTimeout(() => { 
+                        track.style.transition = 'transform 3.8s cubic-bezier(0.08, 0.6, 0.1, 1)'; 
+                        track.style.transform = `translateX(${targetOffset}px)`; 
+                    }, 40 + i * 50); 
+                }
+                setTimeout(() => {
+                    clearTimeout(tickTimer);
+                    finalize();
+                }, 4500);
+            }
+        }
+
+        function renderInventory() {
+            const root = document.getElementById('inv-grid');
+            root.innerHTML = '';
+            document.getElementById('inv-empty').style.display = inventory.length ? 'none' : 'block';
+            [...inventory].reverse().forEach(it => {
+                const el = document.createElement('div'); el.className = 'card';
+                el.innerHTML = `<div class="card-title">${it.name}</div><img src="${it.img}" alt=""><div class="card-price">${it.price.toLocaleString()} ₽</div><button class="btn btn-green" onclick="sellItem('${it.uid}')">Продать</button>`;
+                root.appendChild(el);
+            });
+        }
+
+        function sellItem(uid) {
+            if (isUpgrading || isSpinningCase) return;
+            const idx = inventory.findIndex(x => x.uid === uid);
+            if (idx !== -1) {
+                balance += inventory[idx].price;
+                upgradeOffers = upgradeOffers.filter(x => x !== uid);
+                inventory.splice(idx, 1);
+                updateBalance(); renderInventory(); saveGame();
+            }
+        }
+
+        function renderPresetButtons() {
+            const box = document.getElementById('preset-buttons-box');
+            box.innerHTML = '';
+            customPresets.forEach((val) => {
+                const btn = document.createElement('button'); btn.className = 'preset-btn'; btn.innerText = val;
+                btn.onclick = () => executePreset(val); box.appendChild(btn);
+            });
+        }
+
+        function executePreset(presetStr) {
+            if (isUpgrading) return;
+            const offerSum = upgradeOffers.reduce((s, uid) => s + (inventory.find(x => x.uid === uid)?.price || 0), 0);
+            if (offerSum === 0) return alert("Сначала выберите скины для ставки!");
+
+            let idealPrice = (presetStr.startsWith('x') || presetStr.startsWith('X')) ? offerSum * (parseFloat(presetStr.slice(1)) || 2) : offerSum / ((parseFloat(presetStr) || 50) / 100);
+            
+            if (idealPrice < offerSum) idealPrice = offerSum;
+            
+            let closest = null, minDiff = Infinity;
+            for (let i = 0; i < csSkins.length; i++) {
+                if (csSkins[i].price >= offerSum) {
+                    const diff = Math.abs(csSkins[i].price - idealPrice);
+                    if (diff < minDiff) { minDiff = diff; closest = csSkins[i]; }
+                }
+            }
+            if (closest) {
+                upgradeTarget = closest; 
+                renderUpgrade();
+            }
+        }
+
+        function openPresetConfig() {
+            const cont = document.getElementById('preset-inputs-container');
+            cont.innerHTML = '';
+            for (let i = 0; i < 6; i += 2) {
+                cont.innerHTML += `<div class="preset-config-row"><input type="text" id="preset-inp-${i}" value="${customPresets[i] || ''}"><input type="text" id="preset-inp-${i+1}" value="${customPresets[i+1] || ''}"></div>`;
+            }
+            document.getElementById('modal-preset-config').style.display = 'flex';
+        }
+
+        function closePresetConfig() { document.getElementById('modal-preset-config').style.display = 'none'; }
+        function saveCustomPresets() {
+            for (let i = 0; i < 6; i++) { const val = document.getElementById(`preset-inp-${i}`).value.trim(); if (val) customPresets[i] = val; }
+            closePresetConfig(); renderPresetButtons(); saveGame();
+        }
+
+        function renderUpgrade() {
+            const slotsBox = document.getElementById('slots-input'); slotsBox.innerHTML = '';
+            let offerSum = 0;
+            for (let i = 0; i < 6; i++) {
+                if (i < upgradeOffers.length) {
+                    const item = inventory.find(x => x.uid === upgradeOffers[i]);
+                    if (item) {
+                        offerSum += item.price;
+                        slotsBox.innerHTML += `<div class="slot" style="border-color: #ff007f;"><img src="${item.img}" alt=""><button class="del-btn" onclick="removeUpgItem('${item.uid}')">×</button></div>`;
+                    }
+                } else slotsBox.innerHTML += `<div class="slot" onclick="openOfferModal()">+</div>`;
+            }
+            document.getElementById('upg-offer-sum').innerText = offerSum.toLocaleString();
+
+            if (upgradeTarget && upgradeTarget.price < offerSum) {
+                upgradeTarget = null;
+            }
+
+            const targetBox = document.getElementById('slot-target');
+            if (upgradeTarget) {
+                targetBox.innerHTML = `<img src="${upgradeTarget.img}" alt=""><div style="font-size: 11px; margin-top: 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:110px;">${upgradeTarget.name}</div>`;
+                document.getElementById('upg-target-sum').innerText = upgradeTarget.price.toLocaleString();
+            } else {
+                targetBox.innerHTML = '<span style="color: #777;">+ Выбрать скин</span>'; document.getElementById('upg-target-sum').innerText = '0';
+            }
+
+            let chance = (upgradeTarget && offerSum > 0) ? Math.min(75, (offerSum / upgradeTarget.price) * 100) : 0;
+            document.getElementById('upg-percent').innerText = chance.toFixed(1) + '%';
+            document.getElementById('upg-run-btn').disabled = (chance === 0 || isUpgrading);
+
+            let gradStr = "#1c142b 0deg 360deg";
+            if (chance > 0) {
+                const hw = chance / 2, th = [0, 25, 50, 60, 70, chance].filter(t => t <= chance);
+                if (!th.includes(chance)) th.push(chance); th.sort((a,b)=>a-b);
+                const colP = p => p<25?'#ff007f':p<50?'#ff7700':p<60?'#ffff00':p<70?'#00ff66':'#00f3ff';
+                let rs = [], ls = [];
+                th.forEach(t => { rs.push({p: (t/chance)*hw, c: colP(t)}); ls.push({p: 100 - (t/chance)*hw, c: colP(t)}); });
+                ls.sort((a,b)=>a.p-b.p);
+                let stops = [...rs.map(s=>`${s.c} ${s.p}%`), `#1c142b ${hw}%`, `#1c142b ${100-hw}%`, ...ls.map(s=>`${s.c} ${s.p}%`), `${rs[0].c} 100%`];
+                gradStr = stops.join(', ');
+            }
+            document.getElementById('upg-wheel').style.background = `conic-gradient(from 180deg, ${gradStr})`;
+        }
+
+        function setArrowColor(col) { document.getElementById('upg-arrow').style.backgroundColor = col; document.getElementById('upg-arrow').style.boxShadow = `0 0 12px ${col}, 0 0 4px #fff`; }
+        function openOfferModal() { if (!isUpgrading) openModal("Выберите скин", inventory.filter(x => !upgradeOffers.includes(x.uid)), it => { if (upgradeOffers.length < 6) upgradeOffers.push(it.uid); closeModal(); renderUpgrade(); }); }
+        
+        function openTargetModal() { 
+            if (isUpgrading) return; 
+            const offerSum = upgradeOffers.reduce((s, uid) => s + (inventory.find(x => x.uid === uid)?.price || 0), 0);
+            
+            const validSkins = csSkins.filter(s => s.price >= offerSum);
+            
+            if (validSkins.length === 0) {
+                alert("Ваша ставка слишком высока, нет доступных скинов для апгрейда!");
+                return;
+            }
+
+            openModal(`Желаемый скин (от ${offerSum.toLocaleString()} ₽)`, validSkins, it => { 
+                upgradeTarget = it; 
+                closeModal(); 
+                renderUpgrade(); 
+            }); 
+        }
+
+        function removeUpgItem(uid) { if (!isUpgrading) { upgradeOffers = upgradeOffers.filter(x => x !== uid); renderUpgrade(); } }
+
+        function openModal(title, items, onSelect) {
+            document.getElementById('modal-title').innerText = title; document.getElementById('modal-search').value = '';
+            modalCurrentItems = items; modalOnSelectCallback = onSelect;
+            renderModalList(items); document.getElementById('modal-select').style.display = 'flex';
+        }
+        function renderModalList(items) {
+            const grid = document.getElementById('modal-grid'); grid.innerHTML = '';
+            items.forEach(it => {
+                const el = document.createElement('div'); el.className = 'card'; el.style.cursor = 'pointer';
+                el.innerHTML = `<div class="card-title">${it.name}</div><img src="${it.img}" alt=""><div class="card-price">${it.price.toLocaleString()} ₽</div>`;
+                el.onclick = () => modalOnSelectCallback(it); grid.appendChild(el);
+            });
+        }
+        function filterModalSkins(q) { q = q.toLowerCase().trim(); renderModalList(!q ? modalCurrentItems : modalCurrentItems.filter(it => it.name.toLowerCase().includes(q))); }
+        function closeModal() { document.getElementById('modal-select').style.display = 'none'; }
+
+        function spinUpgrade() {
+            if (isUpgrading || !upgradeTarget || !upgradeOffers.length) return;
+            isUpgrading = true;
+            document.getElementById('upg-run-btn').disabled = true;
+            document.getElementById('upg-res-text').innerText = '';
+            document.querySelectorAll('.preset-btn').forEach(b => b.disabled = true);
+
+            const lockedTarget = { ...upgradeTarget }, lockedOffers = [...upgradeOffers];
+            const offerSum = lockedOffers.reduce((s, uid) => s + (inventory.find(x => x.uid === uid)?.price || 0), 0);
+            let chance = Math.min(75, (offerSum / lockedTarget.price) * 100);
+
+            stats.totalWagered += offerSum;
+            stats.upgradesDone++;
+
+            const cheatWin = document.getElementById('cheat-always-win-upg').checked;
+            let isWin = cheatWin ? true : (Math.random() * 100) <= chance;
+
+            let currentRTP = stats.totalWagered > 0 ? (stats.totalWon / stats.totalWagered) : 0;
+            let rtpTargetDec = targetRTP / 100;
+
+            if (!cheatWin) {
+                if (currentRTP > rtpTargetDec && isWin) {
+                    if (Math.random() < 0.60) isWin = false;
+                } else if (currentRTP < rtpTargetDec * 0.8 && !isWin) {
+                    if (Math.random() < 0.40) isWin = true;
+                }
+            }
+
+            if (isWin) stats.totalWon += lockedTarget.price;
+
+            const halfWingDeg = (chance / 2) * 3.6;
+            const targetAngle = isWin ? 180 + (Math.random() * (halfWingDeg * 2) - halfWingDeg) : (180 + halfWingDeg + (Math.random() * (360 - halfWingDeg * 2))) % 360;
+            currentUpgRotation = Math.floor(currentUpgRotation / 360) * 360 + (5 + Math.floor(Math.random() * 3)) * 360 + targetAngle;
+
+            const duration = document.getElementById('fast-upg').checked ? 1.5 : 3.8;
+            const box = document.getElementById('upg-arrow-box');
+            box.style.transition = `transform ${duration}s cubic-bezier(0.1, 0.7, 0.1, 1)`;
+            box.style.transform = `rotate(${currentUpgRotation}deg)`;
+
+            let upgTicks = 0;
+            let upgTimer;
+            if (!document.getElementById('fast-upg').checked) {
+                const playUpgTick = () => {
+                    if (!isUpgrading) return;
+                    Sound.tick();
+                    upgTicks++;
+                    let delay = 40 + (upgTicks * 5);
+                    if (delay < 400) upgTimer = setTimeout(playUpgTick, delay);
+                };
+                playUpgTick();
+            }
+
+            setTimeout(() => {
+                clearTimeout(upgTimer);
+
+                lockedOffers.forEach(uid => { const idx = inventory.findIndex(x => x.uid === uid); if (idx !== -1) inventory.splice(idx, 1); });
+                if (isWin) {
+                    Sound.firework(); 
+                    inventory.push({ uid: Math.random().toString(36).substr(2, 9), ...lockedTarget });
+                    document.getElementById('upg-res-text').innerHTML = '<span style="color:#00ff66; text-shadow:0 0 8px rgba(0,255,102,0.6);">УСПЕХ! Скин получен.</span>';
+                    checkBestItem(lockedTarget);
+                } else {
+                    Sound.rimshot(); 
+                    document.getElementById('upg-res-text').innerHTML = '<span style="color:#ff007f; text-shadow:0 0 8px rgba(255,0,127,0.6);">НЕУДАЧА! Предметы сгорели.</span>';
+                }
+                
+                upgradeOffers = []; upgradeTarget = null; saveGame();
+                isUpgrading = false; document.querySelectorAll('.preset-btn').forEach(b => b.disabled = false); renderUpgrade();
+            }, duration * 1000 + 100);
+        }
+
+        window.onload = () => { loadGame(); initCases(); renderPresetButtons(); loadOfficialCS2Images(); };
+    </script>
+</body>
+</html>
